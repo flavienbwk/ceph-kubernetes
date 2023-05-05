@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: psitransfer-deployment
+  name: psitransfer-rwo-deployment
   labels:
-    app: psitransfer
+    app: psitransfer-rwo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: psitransfer
+      app: psitransfer-rwo
   template:
     metadata:
       labels:
-        app: psitransfer
+        app: psitransfer-rwo
     spec:
       containers:
-      - name: psitransfer-container
+      - name: psitransfer-rwo-container
         image: psitrax/psitransfer:latest
         ports:
         - containerPort: 3000
@@ -24,23 +24,23 @@ spec:
         - name: PSITRANSFER_ADMIN_PASS
           value: "secret"
         volumeMounts:
-        - name: psitransfer-data
+        - name: psitransfer-rwo-data
           mountPath: /data
         securityContext:
           runAsUser: 0
       volumes:
-      - name: psitransfer-data
+      - name: psitransfer-rwo-data
         persistentVolumeClaim:
-          claimName: psitransfer-data-claim
+          claimName: psitransfer-rwo-data-claim
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: psitransfer-service
+  name: psitransfer-rwo-service
 spec:
   selector:
-    app: psitransfer
+    app: psitransfer-rwo
   ports:
     - protocol: TCP
       port: 80
@@ -51,7 +51,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: psitransfer-data-claim
+  name: psitransfer-rwo-data-claim
 spec:
   accessModes:
   - ReadWriteOnce

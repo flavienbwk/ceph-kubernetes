@@ -1,10 +1,14 @@
 # Ceph Kubernetes
 
-A repo-tutorial to learn how to install and use [Rook Ceph](https://rook.io) on a Kubernetes cluster (block storage).
+A repo-tutorial to learn how to install and use [Rook Ceph](https://rook.io) on a Kubernetes cluster.
+
+👉 Get safe & replicated storage
+👉 Enjoy a _ReadWriteMany_ storage class
+👉 Scale storage horizontally
 
 ## What
 
-Ceph is an open-source software-defined storage solution which allows you to store data as object (through the Ceph Object Gateway - S3-compatible), block (Ceph RBD through OSDs) or file (CephFS).
+Ceph is an open-source software-defined storage solution which allows you to store data as object (through the Ceph Object Gateway - S3-compatible), block (Ceph RBD) or file (CephFS).
 
 Rook is a cloud-native storage orchestrator for Kubernetes while Ceph is a distributed storage system. Rook Ceph is the integration of Rook and Ceph, providing an easy-to-manage storage solution for Kubernetes.
 
@@ -12,11 +16,11 @@ What we will be doing :
 
 1. Prepare a unformatted disk on each node
 2. Install Rook Ceph on a 3-nodes pre-existant Kubernetes cluster (3 nodes required)
-3. Deploy a file sharing app and upload 3 files
+3. Deploy a file sharing app and upload some files
 4. Stop the Kubernetes node on which our web service is deployed
-5. See what happens ! (pod will be re-scheduled, but has the block storage lost data ?)
+5. See what happens ! (pod will be re-scheduled upon removal, but has the block storage lost data ?)
 
-{Screenshot Rook}
+![Ceph dashboard example](./images/ceph_dashboard.png)
 
 ## Why
 
@@ -101,11 +105,11 @@ With Ceph, you have a [continuous scaling path, forward, forever](https://www.yo
     ceph osd status
     ```
 
-6. Create an RBD
+6. Create the RBD storage class
 
-    RBD stands for _RADOS Block Device_ and allows you to have a storage class to provision volumes in your Kubernetes cluster.
+    RBD stands for _RADOS Block Device_ and allows you to have a storage class to provision volumes in your Kubernetes cluster. This only supports `ReadWriteOnce` volumes (RWO). See step 7 for `ReadWriteMany` capabilities.
 
-    :information_source: The storage class name is `rook-ceph-block`
+    :information_source: RBD's storage class name is `rook-ceph-block`
 
     ```bash
     kubectl create -f ./rook/deploy/examples/csi/rbd/storageclass.yaml -n rook-ceph
@@ -118,7 +122,25 @@ With Ceph, you have a [continuous scaling path, forward, forever](https://www.yo
     kubectl get pvc rbd-pvc -n rook-ceph # status should be "BOUND"
     ```
 
-7. Deploy Ceph's dashboard
+7. Create the CephFS storage class
+
+    CephFS acts like a replicated NFS server. This is what will allow us to create volumes in `ReadWriteMany` mode (RWX).
+
+    :information_source: CephFS' storage class name is `rook-cephfs`
+
+    ```bash
+    kubectl create -f ./rook/deploy/examples/filesystem.yaml -n rook-ceph
+    kubectl create -f ./rook/deploy/examples/csi/cephfs/storageclass.yaml -n rook-ceph
+    ```
+
+    To check that a volume correctly bind to the `rook-cephfs` storage class :
+
+    ```bash
+    kubectl create -f ./rook/deploy/examples/csi/cephfs/pvc.yaml -n rook-ceph
+    kubectl get pvc cephfs-pvc -n rook-ceph # status should be "BOUND"
+    ```
+
+8. Deploy Ceph's dashboard
 
     ```bash
     kubectl create -f ./rook/deploy/examples/dashboard-external-https.yaml -n rook-ceph
@@ -143,7 +165,7 @@ Let's now deploy [psitransfer](https://github.com/psi-4ward/psitransfer) !
 1. Deploy the file sharing app
 
     ```bash
-    kubectl create -f ./psitransfer-deployment.yaml
+    kubectl create -f ./psitransfer-deployment-rwx.yaml
     ```
 
     See on which node it is deployed :
@@ -160,15 +182,19 @@ Let's now deploy [psitransfer](https://github.com/psi-4ward/psitransfer) !
 
     Upload them to our file transfer app. Click the link that appears on screen.
 
-    You should now see the tree files imported.
+    You should now see the tree files imported. Click on it and **keep the link in your browser tab**, we'll use it later.
 
-After uploading around 400MB of files, we can prove the replication of data is coherent accross disks. We see that the 3 disks are written simultaneously while we upload a file. Usage is 1% for each disk : although I uploaded on the same host, it seems the replication is working as expected with data equally persisted across the 3 disks (OSDs).
+After uploading around 400MB of files, we can prove the replication of data is coherent accross disks. We see that the 3 disks are written simultaneously while we upload files. In the following screenshot, usage is 1% for each disk : although I uploaded on the same host, it seems the replication is working as expected with data equally persisted across the 3 disks (OSDs). Disk 2 has a lot of "read" activity as the 2 other disks synchronize data from it.
 
-![Ceph File Performances](./ceph_file_performance.png)
+![Ceph File Performances](./images/ceph_file_performance.png)
 
-### C. Destroy and see !
+This is how Ceph's dashboard should look like :
 
-We're going to destroy the node hosting the web app to make sure data was replicated on the other nodes.
+![Ceph dashboard, everything's OK!](./images/ceph_host_connected.png)
+
+### C. Destroy and see
+
+We're going to stop the node hosting the web app to make sure data was replicated on the other nodes.
 
 1. See on which node the app is deployed :
 
@@ -176,4 +202,78 @@ We're going to destroy the node hosting the web app to make sure data was replic
     kubectl get pods -o wide -l app=psitransfer
     ```
 
-2. Shutdown the node from the Scaleway console
+2. Poweroff the node from the Scaleway console
+
+    This simulates a power failure on a node. It should become `NotReady` after several minutes :
+
+    ```bash
+    $> kubectl get node
+    NAME                                             STATUS     ROLES    AGE    VERSION
+    scw-ceph-test-clustr-default-5f02f221c3814b47a   Ready      <none>   3d1h   v1.26.2
+    scw-ceph-test-clustr-default-8929ba466e404a00a   Ready      <none>   3d1h   v1.26.2
+    scw-ceph-test-clustr-default-94ef39ea5b1f4b3e8   NotReady   <none>   3d1h   v1.26.2
+    ```
+
+    And Node 3 is unavailable on our Ceph dashboard :
+
+    ![Node 3 unavailable](./images/ceph_node_3_unavailable.png)
+
+    Ceph's dashboard should look like this :
+
+    ![Partial Ceph objects](./images/ceph_host_disconnected.png)
+
+3. Reschedule our pod
+
+    Scheduled pod node is unavailable. However, our pod still thinks it is active :
+
+    ```bash
+    $> kubectl get pods -o wide -l app=psitransfer
+    NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE
+    psitransfer-deployment-8448887c9d-mt6wm   1/1     Running   0          19h   100.64.1.19   scw-ceph-test-clustr-default-94ef39ea5b1f4b3e8
+    ```
+
+    Delete it to reschedule it on another node :
+
+    ```bash
+    kubectl delete pod psitransfer-deployment-8448887c9d-mt6wm 
+    ```
+
+    Check the status of the newly-restarted pod. You app should be available again at the link previously kept.
+
+    ![Our web app is still accessible with data !](./images/psitransfer_still_here.png)
+
+    :information_source: To avoid having to manually delete the pod to be rescheduled when a node gets "NotReady", scale the number of replicas of your app to at least 3 by default.
+
+    You can now restart the previously powered-off node.
+
+### When to use rook-ceph-block or rook-cephfs ?
+
+If your applications need better performance and require block storage with RWO access mode, use the rook-ceph-block (RBD) storage class. On the other hand, if your applications need a shared file system with RWX (CephFS) access mode and POSIX compliance, use the rook-cephfs storage class.
+
+If choosing RBD and trying to reschedule a pod while its original node is offline as we did with CephFS, you will get an error from the PVC stating : "_Volume is already exclusively attached to one node and can't be attached to another_". In that case, you need to wait (it took me ~6 minutes for the cluster to automatically re-attribute the PVC to my pod, allowing it to start). Try this by :
+
+1. Running RBD's deployment example
+
+    ```bash
+    kubectl create -f ./psitransfer-deployment-rwo.yaml
+    ```
+
+2. Shutting down the instance on which the pod is scheduled
+
+    ```bash
+    kubectl get pods -o wide -l app=psitransfer-rwo
+    ```
+
+    Cordon the node to make sure nothing will be re-scheduled on it :
+
+    ```bash
+    kubectl cordon scw-ceph-test-clustr-default-94ef39ea5b1f4b3e8
+    ```
+
+3. Deleting the pod for it to be reschedule (and wait ~6 minutes)
+
+    ```bash
+    kubectl delete pod --grace-period=0 --force psitransfer-deployment-8448887c9d-mt6wm 
+    ```
+
+You should be able to still access data uploaded previously on the app.

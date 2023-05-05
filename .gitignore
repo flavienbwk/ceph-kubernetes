@@ -1,1 +1,3 @@
 .vscode
+ceph-helm/
+rook/
