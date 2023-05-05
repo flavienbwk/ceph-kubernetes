@@ -250,7 +250,9 @@ We're going to stop the node hosting the web app to make sure data was replicate
 
 If your applications need better performance and require block storage with RWO access mode, use the rook-ceph-block (RBD) storage class. On the other hand, if your applications need a shared file system with RWX (CephFS) access mode and POSIX compliance, use the rook-cephfs storage class.
 
-If choosing RBD and trying to reschedule a pod while its original node is offline as we did with CephFS, you will get an error from the PVC stating : "_Volume is already exclusively attached to one node and can't be attached to another_". In that case, you need to wait (it took me ~6 minutes for the cluster to automatically re-attribute the PVC to my pod, allowing it to start). Try this by :
+If choosing RBD and trying to reschedule a pod while its original node is offline as we did with CephFS, you will get an error from the PVC stating : "_Volume is already exclusively attached to one node and can't be attached to another_". In that case, you just need to wait for the PVC to bind back (it took me ~6 minutes for the cluster to automatically re-attribute the PVC to my pod, allowing it to start).
+
+Try this behavior following this procedure :
 
 1. Running RBD's deployment example
 
@@ -270,7 +272,7 @@ If choosing RBD and trying to reschedule a pod while its original node is offlin
     kubectl cordon scw-ceph-test-clustr-default-94ef39ea5b1f4b3e8
     ```
 
-3. Deleting the pod for it to be reschedule (and wait ~6 minutes)
+3. Deleting the pod for it to be reschedule (and wait ~6 minutes for PVC to bind)
 
     ```bash
     kubectl delete pod --grace-period=0 --force psitransfer-deployment-8448887c9d-mt6wm 
