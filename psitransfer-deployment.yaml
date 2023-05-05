@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: psitransfer-deployment
+  labels:
+    app: psitransfer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: psitransfer
+  template:
+    metadata:
+      labels:
+        app: psitransfer
+    spec:
+      containers:
+      - name: psitransfer-container
+        image: psitrax/psitransfer:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PSITRANSFER_ADMIN_PASS
+          value: "secret"
+        volumeMounts:
+        - name: psitransfer-data
+          mountPath: /data
+        securityContext:
+          runAsUser: 0
+      volumes:
+      - name: psitransfer-data
+        persistentVolumeClaim:
+          claimName: psitransfer-data-claim
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: psitransfer-service
+spec:
+  selector:
+    app: psitransfer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      nodePort: 30080
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: psitransfer-data-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: rook-ceph-block
