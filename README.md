@@ -2,9 +2,9 @@
 
 A repo-tutorial to learn how to install and use [Rook Ceph](https://rook.io) on a Kubernetes cluster.
 
-👉 Get safe & replicated storage
-👉 Enjoy a _ReadWriteMany_ storage class
-👉 Scale storage horizontally
+- 👉 Get safe & replicated storage
+- 👉 Enjoy a _ReadWriteMany_ storage class
+- 👉 Scale storage horizontally
 
 ## What
 
