@@ -38,7 +38,7 @@ Remind that most of the time, a natively distributed system such as an Elasticse
 
 1. Create a 3-nodes Kubernetes cluster
 
-    We recommend [Scaleway Kapsule](https://www.scaleway.com/en/kubernetes-kapsule) to easily instanciate a Kubernetes cluster with 3 nodes and attribute unformatted volumes.
+    We recommend [Scaleway Kapsule](https://www.scaleway.com/en/kubernetes-kapsule) to easily instantiate a Kubernetes cluster with 3 nodes and attribute unformatted volumes.
 
     Once the Kubernetes cluster has started, we will create an attached volume (disk) for **each** node :
 
