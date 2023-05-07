@@ -49,9 +49,9 @@ Remind that most of the time, a natively distributed system such as an Elasticse
 
     The new disk should appear under `/dev/sdb` on each node.
 
-2. Clone the Rook repo
-
     All raw disks will be used for our Ceph cluster.
+
+2. Clone the Rook repo
 
     ```bash
     git clone --single-branch --branch release-1.11 https://github.com/rook/rook.git
