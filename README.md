@@ -240,7 +240,7 @@ We're going to stop the node hosting the web app to make sure data was replicate
     kubectl delete pod psitransfer-deployment-8448887c9d-mt6wm 
     ```
 
-    Check the status of the newly-restarted pod. You app should be available again at the link previously kept.
+    Check the status of the newly-restarted pod. Your app should be available again at the link previously kept.
 
     ![Our web app is still accessible with data !](./images/psitransfer_still_here.png)
 
