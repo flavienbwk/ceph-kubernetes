@@ -4,7 +4,7 @@ A repo-tutorial to learn how to install and use [Rook Ceph](https://rook.io) on 
 
 - 👉 Get a safe & replicated storage
 - 👉 Enjoy a _ReadWriteMany_ storage class
-- 👉 Scale storage horizontally
+- 👉 Scale storage horizontally and safely
 
 ## What
 
@@ -29,6 +29,8 @@ Ceph allows you to get a fault-tolerant and replicated storage for your Kubernet
 Additionnaly, it avoids putting too much disk pressure on one single storage source. It makes you save money by lowering the cost of maintenance of your storage servers, as it is managed by Kubernetes (allows updates across the cluster, horizontal scaling on several smaller servers).
 
 With Ceph, you have a [continuous scaling path, forward, forever](https://www.youtube.com/watch?v=yeAlzSp6yaE).
+
+Remind that most of the time, a natively distributed system such as an Elasticsearch cluster has its nodes each using an individual PVC. Elasticsearch then natively manages data replication across its nodes. Ceph can still be useful to avoid the loss of the underlying data used by nodes. This is a kind of double security for your data. Ceph is the most useful when it comes to non-native distributed systems such as a simple PostgreSQL database or backups data.
 
 ## Getting started
 
@@ -246,7 +248,7 @@ We're going to stop the node hosting the web app to make sure data was replicate
 
     You can now restart the previously powered-off node.
 
-### When to use rook-ceph-block or rook-cephfs ?
+### When to use **rook-ceph-block** or **rook-cephfs** ?
 
 If your applications need better performance and require block storage with RWO access mode, use the rook-ceph-block (RBD) storage class. On the other hand, if your applications need a shared file system with RWX (CephFS) access mode and POSIX compliance, use the rook-cephfs storage class.
 
