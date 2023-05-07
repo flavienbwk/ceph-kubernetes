@@ -6,6 +6,8 @@ A repo-tutorial to learn how to install and use [Rook Ceph](https://rook.io) on 
 - 👉 Enjoy a _ReadWriteMany_ storage class
 - 👉 Scale storage horizontally and safely
 
+Read the [associated blog post on Medium](https://medium.com/@flavienb/infinitely-scalable-storage-for-kubernetes-9a20393e37e4) !
+
 ## What
 
 Ceph is an open-source software-defined storage solution which allows you to store data as object (through the Ceph Object Gateway - S3-compatible), block (Ceph RBD) or file (CephFS).
