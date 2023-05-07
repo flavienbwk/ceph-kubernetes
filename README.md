@@ -186,7 +186,7 @@ Let's now deploy [psitransfer](https://github.com/psi-4ward/psitransfer) !
 
     You should now see the tree files imported. Click on it and **keep the link in your browser tab**, we'll use it later.
 
-After uploading around 400MB of files, we can prove the replication of data is coherent accross disks. We see that the 3 disks are written simultaneously while we upload files. In the following screenshot, usage is 1% for each disk : although I uploaded on the same host, it seems the replication is working as expected with data equally persisted across the 3 disks (OSDs). Disk 2 has a lot of "read" activity as the 2 other disks synchronize data from it.
+After uploading around 400MB of files, we can prove the replication of data is coherent across disks. We see that the 3 disks are written simultaneously while we upload files. In the following screenshot, usage is 1% for each disk : although I uploaded on the same host, it seems the replication is working as expected with data equally persisted across the 3 disks (OSDs). Disk 2 has a lot of "read" activity as the 2 other disks synchronize data from it.
 
 ![Ceph File Performances](./images/ceph_file_performance.png)
 
